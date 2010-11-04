@@ -12,13 +12,17 @@ console.log(OAuth.signHmacSha1(s, 'anonymous'));
 */
 var config = {
     server: 'www.google.com',
-    requestTokenURI: '/accounts/OAuthGetRequestToken',
+    requestTokenURI: 'https://www.google.com/accounts/OAuthGetRequestToken',
+    authorizeTokenURI: 'https://www.google.com/accounts/OAuthAuthorizeToken',
+    accessTokenURI: 'https://www.google.com/accounts/OAuthGetAccessToken',
     signatureMethod: 'HMAC-SHA1',
-    signatureKey: 'anonymous',
     consumerKey: 'anonymous',
-    callbackURI: '/callback'
+    consumerSecret: 'anonymous',
+    callbackURI: 'http://itealabs.net/callback'
 };
 
 var oa = new OAuth(config);
-oa.getRequestToken({scope: 'http://www.google.com/calendar/feeds http://picasaweb.google.com/data'});
-
+oa.getRequestToken({scope: 'http://www.google.com/calendar/feeds http://picasaweb.google.com/data'}, function(oa){
+console.log(oa.oauthToken);
+console.log(oa.getAuthorizeTokenURI());
+});

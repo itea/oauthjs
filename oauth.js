@@ -15,15 +15,14 @@ function OAuth(configuration) {
     this.config = configuration || {};
 }
 
-OAuth.prototype.getRequestToken = function(body){
-    var client = http.createClient(443, this.config.server, true);
+OAuth.prototype.getRequestToken = function(body, callback, ctx){
+    var client = OAuth.createClient(this.config.requestTokenURI);
     
     var oauthHeader = OAuth.buildRequestAuthorizationHeader(this.config);
     var signatureBaseString = OAuth.generateSignatureBaseString('POST',
-        ['https://', this.config.server, this.config.requestTokenURI].join(''),
-        oauthHeader, body);
+        this.config.requestTokenURI, oauthHeader, body);
     console.log('baseString: '+ signatureBaseString);
-    oauthHeader['oauth_signature'] = (OAuth.sign(this.config.signatureMethod, signatureBaseString, this.config.signatureKey));
+    oauthHeader['oauth_signature'] = OAuth.sign(this, signatureBaseString);
     
     var headers = {
         'Host': this.config.server,
@@ -34,19 +33,55 @@ OAuth.prototype.getRequestToken = function(body){
     var request = client.request('POST', this.config.requestTokenURI, headers);
     request.write(OAuth.toBodyString(body));
     request.end();
+    
+    var oauth = this;
     request.on('response', function(response) {
         console.log('status: ' + response.statusCode);
-        console.log('HEADERS: '+ JSON.stringify(response.headers));
-        response.setEncoding('utf8');
-        response.on('data', function(data) {
-            console.log('BODY: '+ data);
-        });
+        if(response.statusCode.toString() === '200') {
+            response.setEncoding('utf8');
+            response.on('data', function(data) {
+                console.log('BODY: '+ data);
+                OAuth.parseBody(data.toString(), oauth);
+                callback.call(ctx, oauth);
+            });
+        }
     });
+};
+
+OAuth.prototype.getAuthorizeTokenURI = function(parameters){
+    var s = [];
+    parameters = parameters || {};
+    s.push('oauth_token='+ encodeURIComponent(this.oauthToken));
+    for(var p in parameters) s.push([p, '=', encodeURIComponent(parameters[p])].join(''));
+    return [this.config.authorizeTokenURI, '?', s.join('&')].join('');
 };
 
 OAuth.prototype.authorizeToken = function(){};
 
 OAuth.prototype.getAccessToken = function(){};
+
+OAuth.createClient = function(uri) {
+    var secure = /^https.+/.test(uri) ? true : false;
+    var group = /^https?:\/\/([^\/:]+)(?:\:(\d+))?.*$/.exec(uri) || [];
+    var port = group[2];
+    var server = group[1];
+    if(!port) port = secure ? 443 : 80;
+    port = +port;
+    return http.createClient(port, server, secure);
+};
+OAuth.parseBody = function(body, oauth) {
+    var s = body.split('&'), i, idx, b = oauth || {};
+    for(i=0; i<s.length; i++) {
+        idx = s[i].indexOf('=');
+        switch(s[i].substring(0, idx++)) {
+        case 'oauth_token':
+            b.oauthToken = decodeURIComponent(s[i].substring(idx)); break;
+        case 'oauth_token_secret':
+            b.oauthTokenSecret = decodeURIComponent(s[i].substring(idx)); break;
+        }
+    }
+    return b;
+};
 
 OAuth.buildRequestAuthorizationHeader = function(config) {
     return {
@@ -96,8 +131,10 @@ OAuth.generateSignatureBaseString = function(method, baseURL, headers, bodys) {
             encodeURIComponent(params.sort().join('&'))].join('&');
 };
 
-OAuth.sign = function(method, baseString, key) {
-    if(method === 'HMAC-SHA1') return OAuth.signHmacSha1(baseString, key + '&');
+OAuth.sign = function(oauth, baseString) {
+    var method = oauth.config.signatureMethod;
+    var key = [oauth.config.consumerSecret ||'', '&', oauth.tokenSecret ||''].join('');
+    if(method === 'HMAC-SHA1') return OAuth.signHmacSha1(baseString, key);
     else if(method === 'RSA-SHA1') return null;
 };
 
