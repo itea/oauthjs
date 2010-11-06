@@ -1,8 +1,10 @@
 /**
  * oauth.js
  * OAuth Client for Node.js
- * @author itea 2010-10-29
- * @version 0.1 2010-11-05
+ * @author itea <iteahere@gmail.com> 2010-10-29
+ * @version 0.1 2010-11-06
+ * @license MIT
+ * @git git://github.com/itea/oauthjs.git
  */
 
 var http = require('http'), querystring = require('querystring');

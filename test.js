@@ -27,7 +27,7 @@ oa.acquireRequestToken({scope: 'http://www.google.com/calendar/feeds http://pica
         console.log('stdinend');
         oa.setOAuthVerifier(v);
         oa.acquireAccessToken(function(oa){
-            
+            console.log(oa.generateAuthorizationString());
         });
     });
 });
