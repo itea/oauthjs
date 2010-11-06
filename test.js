@@ -22,7 +22,21 @@ var config = {
 };
 
 var oa = new OAuth(config);
-oa.getRequestToken({scope: 'http://www.google.com/calendar/feeds http://picasaweb.google.com/data'}, function(oa){
-console.log(oa.oauthToken);
-console.log(oa.getAuthorizeTokenURI());
+oa.acquireRequestToken({scope: 'http://www.google.com/calendar/feeds http://picasaweb.google.com/data'}, function(oa){
+    console.log(oa.oauthToken);
+    console.log(oa.getAuthorizeTokenURI());
+    console.log('------------PLEASE INPUT OAUTH_VERIFIER(NOT ENCODED):');
+    
+    var v = '';
+    var stdin = process.openStdin();
+    stdin.on('data', function(d){
+        v = d.toString();
+    });
+    stdin.on('end', function() {
+        console.log('stdinend');
+        oa.setOAuthVerifier(v);
+        oa.acquireAccessToken(function(oa){
+            
+        });
+    });
 });
