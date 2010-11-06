@@ -5,7 +5,7 @@
  * @version 0.1 2010-11-05
  */
 
-var http = require('http');
+var http = require('http'), querystring = require('querystring');
 var enc = encodeURIComponent, dec = decodeURIComponent;
 /**
  *
@@ -31,7 +31,7 @@ OAuth.prototype.acquireRequestToken = function(body, callback, ctx) {
     };
     //console.log(JSON.stringify(headers));
     var request = client.request('POST', this.config.requestTokenURI, headers);
-    request.write(OAuth.toBodyString(body));
+    request.write(querystring.stringify(body));
     request.end();
     
     var oauth = this;
@@ -127,19 +127,10 @@ OAuth.createClient = function(uri) {
 
 OAuth.parseOAuthBody = function(body, oauth) {
     oauth = oauth || {};
-    var b = OAuth.parse(body);
+    var b = querystring.parse(body);
     oauth.oauthToken = b.oauth_token;
     oauth.oauthTokenSecret = b.oauth_token_secret;
     return oauth;
-};
-
-OAuth.parse = function(body, mix) {
-    var s = body.split('&'), i, idx, b = mix || {};
-    for(i=0; i<s.length; i++) {
-        idx = s[i].indexOf('=');
-        b[dec(s[i].substring(0, idx++))] = dec(s[i].substring(idx));
-    }
-    return b;
 };
 
 /**
@@ -193,14 +184,6 @@ OAuth.toAuthorizationHeaderString = function(header) {
         a.push([v, '="', enc(header[v]), '"'].join(''));
     }
     return 'OAuth ' + a.join(',');
-};
-
-OAuth.toBodyString = function(body) {
-    var a = [];
-    for(var v in body) {
-        a.push([enc(v), '=', enc(body[v])].join(''));
-    }
-    return a.join('&');
 };
 
 /**
