@@ -14,6 +14,10 @@ var config = {
 
 var oa = new OAuth(config);
 oa.acquireRequestToken({scope: 'http://www.google.com/calendar/feeds http://picasaweb.google.com/data', xoauth_displayname: 'my test'}, function(oa){
+    if(oa instanceof Error) {
+        console.log(oa.statusCode +' '+ oa);
+        process.exit(1);
+    }
     console.log(oa.oauthToken);
     console.log(oa.getAuthorizeTokenURI());
     console.log('------------PLEASE INPUT OAUTH_VERIFIER(NOT ENCODED):');
@@ -27,7 +31,9 @@ oa.acquireRequestToken({scope: 'http://www.google.com/calendar/feeds http://pica
         console.log('stdinend');
         oa.setOAuthVerifier(v);
         oa.acquireAccessToken(function(oa){
-            console.log(oa.generateAuthorizationString());
+            if(oa instanceof OAuth) {
+                console.log(oa.generateAuthorizationString());
+            } else console.log(oa.statusCode +' '+ oa);
         });
     });
 });

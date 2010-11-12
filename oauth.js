@@ -50,7 +50,7 @@ OAuth.prototype.acquireRequestToken = function(body, callback, ctx) {
                 //console.log('ERROR-BODY: '+ data);
                 var err = new Error(data.toString());
                 err.statusCode = response.statusCode;
-                throw err;
+                callback && callback.call(ctx, err);
             });
         }
     });
@@ -100,7 +100,7 @@ OAuth.prototype.acquireAccessToken = function(callback, ctx){
                 //console.log('ERROR-BODY: '+ data);
                 var err = new Error(data.toString());
                 err.statusCode = response.statusCode;
-                throw err;
+                callback && callback.call(ctx, err);
             });
         }
     });

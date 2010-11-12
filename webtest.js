@@ -25,13 +25,17 @@ app.get('/', function(request, response) {
 app.get('/requestToken', function(request, response) {
     oauth.acquireRequestToken({scope: 'http://www.google.com/calendar/feeds'},
         function(oa) {
-            response.redirect(oa.getAuthorizeTokenURI());
+            if(oa instanceof Error) {
+                response.send(oa.statusCode +' '+ oa.toString());
+            } else response.redirect(oa.getAuthorizeTokenURI());
         });
 });
 app.get('/callback', function(request, response) {
     oauth.setOAuthVerifier(request.param('oauth_verifier'));
     oauth.acquireAccessToken(function(oa){
-        response.send(oa.oauthToken);
+            if(oa instanceof Error) {
+                response.send(oa.statusCode +' '+ oa.toString());
+            } else response.send(oa.oauthToken);
     });
 });
 
