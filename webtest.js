@@ -3,7 +3,7 @@ var OAuth = require('./oauth').OAuth;
 var express = require('express');
 
 var app = express.createServer();
-app.use(express.bodyDecoder());
+app.use(express.bodyParser());
 app.use(express.errorHandler({showStack:true, dumpExceptions:true}));
 
 var config = {
@@ -35,7 +35,7 @@ app.get('/callback', function(request, response) {
     oauth.acquireAccessToken(function(oa){
             if(oa instanceof Error) {
                 response.send(oa.statusCode +' '+ oa.toString());
-            } else response.send(oa.oauthToken);
+            } else response.send('success:' + oa.oauthToken);
     });
 });
 

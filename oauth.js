@@ -8,6 +8,7 @@
  */
 
 var http = require('http'), querystring = require('querystring');
+var https = require('https');
 var enc = encodeURIComponent, dec = decodeURIComponent;
 /**
  *
@@ -32,7 +33,14 @@ OAuth.prototype.acquireRequestToken = function(body, callback, ctx) {
         'Authorization': OAuth.toAuthorizationHeaderString(oauthHeader)
     };
     //console.log(JSON.stringify(headers));
-    var request = client.request('POST', this.config.requestTokenURI, headers);
+    var request = client.http.request({
+        host: client.host,
+        port: client.port,
+        path: client.path,
+        method: 'POST',
+        headers: headers
+    });
+
     request.write(querystring.stringify(body));
     request.end();
     
@@ -82,7 +90,13 @@ OAuth.prototype.acquireAccessToken = function(callback, ctx){
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': OAuth.toAuthorizationHeaderString(oauthHeader)
     };
-    var request = client.request('POST', this.config.accessTokenURI, headers);
+    var request = client.http.request({
+        host: client.host,
+        port: client.port,
+        path: client.path,
+        method: 'POST',
+        headers: headers
+    });
     request.end();
 
     var oauth = this;
@@ -124,7 +138,22 @@ OAuth.createClient = function(uri) {
     var port = group[2], server = group[1];
     if(!port) port = secure ? 443 : 80;
     port = +port;
-    return http.createClient(port, server, secure);
+    if (secure) {
+        return {
+            http: https,
+            host: server,
+            port: port,
+            path: group[3]
+        };
+    }
+    else {
+        return {
+            http: http,
+            host: server,
+            port: port,
+            path: group[3]
+        };
+    }
 };
 
 OAuth.parseOAuthBody = function(body, oauth) {
